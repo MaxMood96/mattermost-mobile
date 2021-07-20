@@ -48,6 +48,7 @@ export default class List extends PureComponent {
         styles: PropTypes.object.isRequired,
         theme: PropTypes.object.isRequired,
         orderedChannelIds: PropTypes.array.isRequired,
+        channelsByCategory: PropTypes.object.isRequired,
     };
 
     static contextTypes = {

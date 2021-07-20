@@ -1,11 +1,14 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
+/* eslint-disable max-lines */
+/* eslint-disable max-nested-callbacks */
+
 import {batchActions} from 'redux-batched-actions';
 
 import {ViewTypes} from 'app/constants';
 
-import {ChannelTypes, RoleTypes, GroupTypes} from '@mm-redux/action_types';
+import {ChannelTypes, RoleTypes, GroupTypes, ChannelCategoryTypes} from '@mm-redux/action_types';
 import {
     fetchMyChannelsAndMembers,
     getChannelByName,
@@ -712,6 +715,7 @@ export function loadChannelsForTeam(teamId, skipDispatch = false, isReconnect = 
             teamId,
             teamChannels: getChannelsIdForTeam(state, teamId),
         };
+        const categoriesData = {};
 
         const actions = [];
         if (currentUserId) {
@@ -723,15 +727,38 @@ export function loadChannelsForTeam(teamId, skipDispatch = false, isReconnect = 
                         Client4.getMyChannelMembers(teamId),
                     ]);
 
+                    // eslint-disable-next-line no-await-in-loop
+                    const categoriesResponse = await Client4.getChannelCategories(currentUserId, teamId);
+
+                    categoriesData.categories = categoriesResponse.categories;
+                    categoriesData.order = categoriesResponse.order;
+
                     data.channels = channels;
                     data.channelMembers = channelMembers;
                     break;
                 } catch (err) {
+                    // eslint-disable-next-line no-console
+                    console.log(err);
                     if (i === MAX_RETRIES) {
                         const hasChannelsLoaded = state.entities.channels.channelsInTeam[teamId]?.size > 0;
                         return {error: hasChannelsLoaded ? null : err};
                     }
                 }
+            }
+
+            if (categoriesData.categories) {
+                actions.push({
+                    type: ChannelCategoryTypes.RECEIVED_CATEGORY_ORDER,
+                    data: {
+                        teamId,
+                        order: categoriesData.order,
+                    },
+                });
+
+                actions.push({
+                    type: ChannelCategoryTypes.RECEIVED_CATEGORIES,
+                    data: categoriesData.categories,
+                });
             }
 
             if (data.channels) {

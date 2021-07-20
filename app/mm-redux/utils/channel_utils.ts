@@ -736,3 +736,14 @@ export function filterChannelsMatchingTerm(channels: Array<Channel>, term: strin
             displayName.startsWith(lowercasedTerm);
     });
 }
+
+export function removeItem<T>(array: T[], item: T) {
+    const index = array.indexOf(item);
+    if (index === -1) {
+        return array;
+    }
+
+    const result = [...array];
+    result.splice(index, 1);
+    return result;
+}

@@ -3,6 +3,7 @@
 
 import {analytics} from '@init/analytics';
 import {Channel, ChannelMemberCountByGroup, ChannelMembership, ChannelNotifyProps, ChannelStats} from '@mm-redux/types/channels';
+import {ChannelCategory, OrderedChannelCategories} from '@mm-redux/types/channel_categories';
 import {buildQueryString} from '@mm-redux/utils/helpers';
 
 import {PER_PAGE_DEFAULT} from './constants';
@@ -40,6 +41,10 @@ export interface ClientChannelsMix {
     autocompleteChannelsForSearch: (teamId: string, name: string) => Promise<Channel[]>;
     searchChannels: (teamId: string, term: string) => Promise<Channel[]>;
     searchArchivedChannels: (teamId: string, term: string) => Promise<Channel[]>;
+
+    // Categories
+    getChannelCategories: (userId: string, teamId: string) => Promise<OrderedChannelCategories>;
+    getChannelCategory: () => Promise<ChannelCategory>;
 }
 
 const ClientChannels = (superclass: any) => class extends superclass {
@@ -304,6 +309,25 @@ const ClientChannels = (superclass: any) => class extends superclass {
         return this.doFetch(
             `${this.getTeamRoute(teamId)}/channels/search_archived`,
             {method: 'post', body: JSON.stringify({term})},
+        );
+    };
+
+    // Channel Category Routes
+    getChannelCategoriesRoute(userId: string, teamId: string) {
+        return `${this.getBaseRoute()}/users/${userId}/teams/${teamId}/channels/categories`;
+    }
+
+    getChannelCategories = (userId: string, teamId: string) => {
+        return this.doFetch(
+            `${this.getChannelCategoriesRoute(userId, teamId)}`,
+            {method: 'get'},
+        );
+    };
+
+    getChannelCategory = (userId: string, teamId: string, categoryId: string) => {
+        return this.doFetch(
+            `${this.getChannelCategoriesRoute(userId, teamId)}/${categoryId}`,
+            {method: 'get'},
         );
     };
 };
