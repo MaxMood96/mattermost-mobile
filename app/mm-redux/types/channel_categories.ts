@@ -6,7 +6,7 @@ import {Team} from './teams';
 import {UserProfile} from './users';
 import {$ID, IDMappedObjects, RelationOneToOne} from './utilities';
 
-export type ChannelCategoryType = 'favorites' | 'channels' | 'direct_messages' | 'custom' | 'public' | 'private';
+export type ChannelCategoryType = 'unreads' | 'favorites' | 'channels' | 'direct_messages' | 'custom' | 'public' | 'private';
 
 // eslint-disable-next-line no-shadow
 export enum CategorySorting {
@@ -18,7 +18,7 @@ export enum CategorySorting {
 
 export type ChannelCategory = {
     id: string;
-    user_id: $ID<UserProfile>;
+    user_id?: $ID<UserProfile>;
     team_id: $ID<Team>;
     type: ChannelCategoryType;
     display_name: string;

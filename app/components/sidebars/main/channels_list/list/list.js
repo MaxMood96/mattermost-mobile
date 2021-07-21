@@ -39,16 +39,17 @@ let UnreadIndicator = null;
 export default class List extends PureComponent {
     static propTypes = {
         testID: PropTypes.string,
+        styles: PropTypes.object.isRequired,
+        theme: PropTypes.object.isRequired,
+        onSelectChannel: PropTypes.func.isRequired,
         canJoinPublicChannels: PropTypes.bool.isRequired,
         canCreatePrivateChannels: PropTypes.bool.isRequired,
         canCreatePublicChannels: PropTypes.bool.isRequired,
-        favoriteChannelIds: PropTypes.array.isRequired,
-        onSelectChannel: PropTypes.func.isRequired,
+        showLegacySidebar: PropTypes.bool.isRequired,
         unreadChannelIds: PropTypes.array.isRequired,
-        styles: PropTypes.object.isRequired,
-        theme: PropTypes.object.isRequired,
+        favoriteChannelIds: PropTypes.array.isRequired,
         orderedChannelIds: PropTypes.array.isRequired,
-        channelsByCategory: PropTypes.object.isRequired,
+        channelsByCategory: PropTypes.array.isRequired,
     };
 
     static contextTypes = {
@@ -91,11 +92,13 @@ export default class List extends PureComponent {
             canCreatePrivateChannels,
             orderedChannelIds,
             unreadChannelIds,
+            channelsByCategory,
         } = prevProps;
 
         if (this.props.canCreatePrivateChannels !== canCreatePrivateChannels ||
             this.props.unreadChannelIds !== unreadChannelIds ||
-            this.props.orderedChannelIds !== orderedChannelIds) {
+            this.props.orderedChannelIds !== orderedChannelIds ||
+            this.props.channelsByCategory !== channelsByCategory) {
             this.setSections(this.buildSections(this.props));
         }
 
@@ -111,7 +114,7 @@ export default class List extends PureComponent {
         this.listRef = ref;
     }
 
-    getSectionConfigByType = (props, sectionType) => {
+    getSectionConfigByType = (props, sectionType, displayName = 'x') => {
         const {canCreatePrivateChannels, canJoinPublicChannels} = props;
 
         switch (sectionType) {
@@ -120,6 +123,7 @@ export default class List extends PureComponent {
                 id: t('mobile.channel_list.unreads'),
                 defaultMessage: 'UNREADS',
             };
+        case 'favorites':
         case SidebarSectionTypes.FAVORITE:
             return {
                 id: t('sidebar.favorite'),
@@ -137,6 +141,7 @@ export default class List extends PureComponent {
                 id: t('sidebar.pg'),
                 defaultMessage: 'PRIVATE CHANNELS',
             };
+        case 'direct_messages':
         case SidebarSectionTypes.DIRECT:
             return {
                 action: this.goToDirectMessages,
@@ -149,11 +154,17 @@ export default class List extends PureComponent {
                 id: t('sidebar.types.recent'),
                 defaultMessage: 'RECENT ACTIVITY',
             };
+        case 'channels':
         case SidebarSectionTypes.ALPHA:
             return {
                 action: this.showCreateChannelOptions,
                 id: t('mobile.channel_list.channels'),
                 defaultMessage: 'CHANNELS',
+            };
+        case 'custom':
+            return {
+                id: displayName,
+                defaultMessage: displayName,
             };
         default:
             return {
@@ -165,14 +176,36 @@ export default class List extends PureComponent {
     };
 
     buildSections = (props) => {
+        if (props.showLegacySidebar) {
+            const {
+                orderedChannelIds,
+            } = props;
+
+            return orderedChannelIds.map((s) => {
+                return {
+                    ...this.getSectionConfigByType(props, s.type),
+                    data: s.items,
+                };
+            });
+        }
+
         const {
+            channelsByCategory,
             orderedChannelIds,
         } = props;
 
-        return orderedChannelIds.map((s) => {
+        const unreads = orderedChannelIds.find((el) => el.type === 'unreads');
+
+        channelsByCategory.unshift({
+            channel_ids: unreads.items,
+            name: unreads.name,
+            type: unreads.type,
+        });
+
+        return channelsByCategory.map((cat) => {
             return {
-                ...this.getSectionConfigByType(props, s.type),
-                data: s.items,
+                ...this.getSectionConfigByType(props, cat.type, cat.display_name),
+                data: cat.channel_ids,
             };
         });
     };

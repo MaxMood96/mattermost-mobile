@@ -715,24 +715,20 @@ export function loadChannelsForTeam(teamId, skipDispatch = false, isReconnect = 
             teamId,
             teamChannels: getChannelsIdForTeam(state, teamId),
         };
-        const categoriesData = {};
 
         const actions = [];
         if (currentUserId) {
             for (let i = 0; i <= MAX_RETRIES; i++) {
                 try {
                     console.log('Fetching channels attempt', (i + 1), teamId, 'include deleted since', lastConnectAt); //eslint-disable-line no-console
-                    const [channels, channelMembers] = await Promise.all([ //eslint-disable-line no-await-in-loop
+                    const [channels, channelMembers, categories] = await Promise.all([ //eslint-disable-line no-await-in-loop
                         Client4.getMyChannels(teamId, true, lastConnectAt),
                         Client4.getMyChannelMembers(teamId),
+                        Client4.getChannelCategories(currentUserId, teamId),
                     ]);
 
-                    // eslint-disable-next-line no-await-in-loop
-                    const categoriesResponse = await Client4.getChannelCategories(currentUserId, teamId);
-
-                    categoriesData.categories = categoriesResponse.categories;
-                    categoriesData.order = categoriesResponse.order;
-
+                    data.categories = categories.categories;
+                    data.categoriesOrder = categories.order;
                     data.channels = channels;
                     data.channelMembers = channelMembers;
                     break;
@@ -746,18 +742,18 @@ export function loadChannelsForTeam(teamId, skipDispatch = false, isReconnect = 
                 }
             }
 
-            if (categoriesData.categories) {
+            if (data.categories) {
                 actions.push({
                     type: ChannelCategoryTypes.RECEIVED_CATEGORY_ORDER,
                     data: {
                         teamId,
-                        order: categoriesData.order,
+                        order: data.categoriesOrder,
                     },
                 });
 
                 actions.push({
                     type: ChannelCategoryTypes.RECEIVED_CATEGORIES,
-                    data: categoriesData.categories,
+                    data: data.categories,
                 });
             }
 

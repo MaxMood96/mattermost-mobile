@@ -1,6 +1,7 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
+/* eslint-disable no-console */
 import {connect} from 'react-redux';
 
 import {DeviceTypes, ViewTypes} from '@constants';
@@ -51,6 +52,7 @@ function mapStateToProps(state) {
         true, // The mobile app should always display the Unreads section regardless of user settings (MM-13420)
         sidebarPrefs.favorite_at_top === 'true' && favoriteChannelIds.length,
     ));
+
     const channelsByCategory = getChannelsByCategoryForCurrentTeam(state);
 
     let canJoinPublicChannels = true;
@@ -63,13 +65,20 @@ function mapStateToProps(state) {
     const canCreatePublicChannels = showCreateOption(state, config, license, currentTeamId, General.OPEN_CHANNEL, isAdmin, isSystemAdmin);
     const canCreatePrivateChannels = showCreateOption(state, config, license, currentTeamId, General.PRIVATE_CHANNEL, isAdmin, isSystemAdmin);
 
+    console.log('--------------');
+    console.log('Unreads', unreadChannelIds);
+    console.log('Favs', favoriteChannelIds);
+    console.log('Channels', orderedChannelIds);
+    console.log('Categories', channelsByCategory);
+
     return {
+        theme: getTheme(state),
+        showLegacySidebar: config.EnableLegacySidebar === 'true',
         canJoinPublicChannels,
         canCreatePrivateChannels,
         canCreatePublicChannels,
-        favoriteChannelIds,
-        theme: getTheme(state),
         unreadChannelIds,
+        favoriteChannelIds,
         orderedChannelIds,
         channelsByCategory,
     };

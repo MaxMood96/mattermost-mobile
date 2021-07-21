@@ -62,6 +62,7 @@ export type Config = {
     EnableIncomingWebhooks: string;
     EnableLatex: string;
     EnableLdap: string;
+    EnableLegacySidebar: boolean;
     EnableLinkPreviews: string;
     EnableMarketplace: string;
     EnableMetrics: string;

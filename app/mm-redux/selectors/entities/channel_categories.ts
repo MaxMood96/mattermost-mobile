@@ -1,13 +1,13 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
+/* eslint-disable no-console */
 import {createSelector} from 'reselect';
-import shallowEquals from 'shallow-equals';
 
 import {General, Preferences} from '../../constants';
 import {CategoryTypes} from '../../constants/channel_categories';
 
-import {getCurrentChannelId, getMyChannelMemberships} from '@mm-redux/selectors/entities/channels';
+import {getCurrentChannelId, getMyChannelMemberships, getUnreadChannelIds} from '@mm-redux/selectors/entities/channels';
 import {getCurrentUserLocale} from '@mm-redux/selectors/entities/i18n';
 import {getLastPostPerChannel} from '@mm-redux/selectors/entities/posts';
 import {getMyPreferences, getTeammateNameDisplaySetting, shouldAutocloseDMs} from '@mm-redux/selectors/entities/preferences';
@@ -327,49 +327,16 @@ export function makeFilterAndSortChannelsForCategory() {
 
 export function makeGetChannelsByCategory() {
     const getCategoriesForTeam = makeGetCategoriesForTeam();
-    const getUnsortedUnfilteredChannels = makeGetUnsortedUnfilteredChannels();
-
-    // Memoize filterAndSortChannels by category. As long as the categories don't change, we can keep using the same
-    // selector for each category.
-    let filterAndSortChannels: RelationOneToOne<ChannelCategory, ReturnType<typeof makeFilterAndSortChannelsForCategory>>;
-
-    let lastCategoryIds: ReturnType<typeof getCategoryIdsForTeam> = [];
-    let lastChannelsByCategory: RelationOneToOne<ChannelCategory, Channel[]> = {};
 
     return (state: GlobalState, teamId: string) => {
-        const categoryIds = getCategoryIdsForTeam(state, teamId);
-
-        // Create an instance of filterAndSortChannels for each category. As long as we don't add or remove new categories,
-        // we can reuse these selectors to memoize the results of each category. This will also create new selectors when
-        // categories are reordered, but that should be rare enough that it won't meaningfully affect performance.
-        if (categoryIds !== lastCategoryIds) {
-            lastCategoryIds = categoryIds;
-            lastChannelsByCategory = {};
-
-            filterAndSortChannels = {};
-
-            if (categoryIds) {
-                for (const categoryId of categoryIds) {
-                    filterAndSortChannels[categoryId] = makeFilterAndSortChannelsForCategory();
-                }
-            }
-        }
-
         const categories = getCategoriesForTeam(state, teamId);
-        const channels = getUnsortedUnfilteredChannels(state, teamId);
+        const unreadChannels = getUnreadChannelIds(state);
 
-        const channelsByCategory: RelationOneToOne<ChannelCategory, Channel[]> = {};
+        // Remove unreads from categories
+        categories.forEach((category) => {
+            category.channel_ids = category.channel_ids.filter((channel) => !unreadChannels.includes(channel));
+        });
 
-        for (const category of categories) {
-            channelsByCategory[category.id] = filterAndSortChannels[category.id](state, channels, category);
-        }
-
-        // Do a shallow equality check of channelsByCategory to avoid returning a new object containing the same data
-        if (shallowEquals(channelsByCategory, lastChannelsByCategory)) {
-            return lastChannelsByCategory;
-        }
-
-        lastChannelsByCategory = channelsByCategory;
-        return channelsByCategory;
+        return categories;
     };
 }

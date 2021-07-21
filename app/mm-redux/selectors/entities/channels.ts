@@ -944,23 +944,6 @@ export function getChannelMemberCountsByGroup(state: GlobalState, channelId: str
  * Channel Categories
  */
 
-// makeGetChannelsForIds returns a selector that, given an array of channel IDs, returns a list of the corresponding
-// channels. Channels are returned in the same order as the given IDs with undefined entries replacing any invalid IDs.
-// Note that memoization will fail if an array literal is passed in.
-export function makeGetChannelsForIds(): (state: GlobalState, ids: string[]) => Channel[] {
-    return createSelector(
-        getAllChannels,
-        (state: GlobalState, ids: string[]) => ids,
-        (allChannels, ids = []) => {
-            return ids.map((id) => allChannels[id]);
-        },
-    );
-}
-
-export function isUnreadFilterEnabled(state: GlobalState) {
-    return state.views.channelSidebar.unreadFilterEnabled;
-}
-
 export const getCategoriesForCurrentTeam: (state: GlobalState) => ChannelCategory[] = (() => {
     const getCategoriesForTeam = makeGetCategoriesForTeam();
 
@@ -986,40 +969,4 @@ export const getChannelsByCategoryForCurrentTeam: (state: GlobalState) => Relati
         const currentTeamId = getCurrentTeamId(state);
         return getChannelsByCategory(state, currentTeamId);
     });
-})();
-
-const getUnreadChannelIdsSet = createSelector(
-    (state: GlobalState) => getUnreadChannelIds(state, state.views.channel.lastUnreadChannel),
-    (unreadChannelIds) => {
-        return new Set(unreadChannelIds);
-    },
-);
-
-// getChannelsInCategoryOrder returns an array of channels on the current team that are currently visible in the sidebar.
-// Channels are returned in the same order as in the sidebar. Channels in the Unreads category are not included.
-export const getChannelsInCategoryOrder = (() => {
-    return createSelector(
-        getCategoriesForCurrentTeam,
-        getChannelsByCategoryForCurrentTeam,
-        getCurrentChannelId,
-        getUnreadChannelIdsSet,
-        (categories, channelsByCategory, currentChannelId, unreadChannelIds) => {
-            return categories.map((category) => {
-                const channels = channelsByCategory[category.id];
-
-                return channels.filter((channel: Channel) => {
-                    const isUnread = unreadChannelIds.has(channel.id);
-
-                    if (category.collapsed) {
-                        // Filter out channels that would be hidden by a collapsed category
-                        if (!isUnread && currentChannelId !== channel.id) {
-                            return false;
-                        }
-                    }
-
-                    return true;
-                });
-            }).flat();
-        },
-    );
 })();
