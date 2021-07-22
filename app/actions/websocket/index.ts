@@ -47,6 +47,7 @@ import {handleStatusChangedEvent, handleUserAddedEvent, handleUserRemovedEvent, 
 import {getChannelSinceValue} from '@utils/channels';
 import {getPostIdsInChannel} from '@mm-redux/selectors/entities/posts';
 import {handleRefreshAppsBindings} from './apps';
+import {handleSidebarCategoryCreated, handleSidebarCategoryDeleted, handleSidebarCategoryOrderUpdated, handleSidebarCategoryUpdated} from './categories';
 
 export function init(additionalOptions: any = {}) {
     return async (dispatch: DispatchFunc, getState: GetStateFunc) => {
@@ -396,9 +397,22 @@ function handleEvent(msg: WebSocketMessage) {
             return dispatch(handleOpenDialogEvent(msg));
         case WebsocketEvents.RECEIVED_GROUP:
             return dispatch(handleGroupUpdatedEvent(msg));
-        case WebsocketEvents.APPS_FRAMEWORK_REFRESH_BINDINGS: {
+        case WebsocketEvents.APPS_FRAMEWORK_REFRESH_BINDINGS:
             return dispatch(handleRefreshAppsBindings());
-        }
+            break;
+        case WebsocketEvents.SIDEBAR_CATEGORY_CREATED:
+            return dispatch(handleSidebarCategoryCreated(msg));
+            break;
+        case WebsocketEvents.SIDEBAR_CATEGORY_UPDATED:
+            dispatch(handleSidebarCategoryUpdated(msg));
+            break;
+
+        case WebsocketEvents.SIDEBAR_CATEGORY_DELETED:
+            dispatch(handleSidebarCategoryDeleted(msg));
+            break;
+        case WebsocketEvents.SIDEBAR_CATEGORY_ORDER_UPDATED:
+            dispatch(handleSidebarCategoryOrderUpdated(msg));
+            break;
         }
 
         return {data: true};

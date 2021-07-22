@@ -8,7 +8,7 @@ import {batchActions} from 'redux-batched-actions';
 
 import {ViewTypes} from 'app/constants';
 
-import {ChannelTypes, RoleTypes, GroupTypes, ChannelCategoryTypes} from '@mm-redux/action_types';
+import {ChannelTypes, RoleTypes, GroupTypes} from '@mm-redux/action_types';
 import {
     fetchMyChannelsAndMembers,
     getChannelByName,
@@ -16,7 +16,7 @@ import {
     leaveChannel as serviceLeaveChannel,
 } from '@mm-redux/actions/channels';
 import {savePreferences} from '@mm-redux/actions/preferences';
-import {getLicense} from '@mm-redux/selectors/entities/general';
+import {getConfig, getLicense} from '@mm-redux/selectors/entities/general';
 import {addUserToTeam, getTeamByName, removeUserFromTeam, selectTeam} from '@mm-redux/actions/teams';
 import {Client4} from '@client/rest';
 import {General, Preferences} from '@mm-redux/constants';
@@ -44,6 +44,7 @@ import {isDirectChannelVisible, isGroupChannelVisible, getChannelSinceValue, pri
 import {isPendingPost} from '@utils/general';
 import {fetchAppBindings} from '@mm-redux/actions/apps';
 import {appsEnabled} from '@utils/apps';
+import {fetchMyCategories} from '@mm-redux/actions/channel_categories';
 
 const MAX_RETRIES = 3;
 
@@ -708,6 +709,7 @@ function loadGroupData(isReconnect = false) {
 export function loadChannelsForTeam(teamId, skipDispatch = false, isReconnect = false) {
     return async (dispatch, getState) => {
         const state = getState();
+        const config = getConfig(state);
         const currentUserId = getCurrentUserId(state);
         const lastConnectAt = state.websocket?.lastConnectAt || 0;
         const data = {
@@ -721,14 +723,11 @@ export function loadChannelsForTeam(teamId, skipDispatch = false, isReconnect = 
             for (let i = 0; i <= MAX_RETRIES; i++) {
                 try {
                     console.log('Fetching channels attempt', (i + 1), teamId, 'include deleted since', lastConnectAt); //eslint-disable-line no-console
-                    const [channels, channelMembers, categories] = await Promise.all([ //eslint-disable-line no-await-in-loop
+                    const [channels, channelMembers] = await Promise.all([ //eslint-disable-line no-await-in-loop
                         Client4.getMyChannels(teamId, true, lastConnectAt),
                         Client4.getMyChannelMembers(teamId),
-                        Client4.getChannelCategories(currentUserId, teamId),
                     ]);
 
-                    data.categories = categories.categories;
-                    data.categoriesOrder = categories.order;
                     data.channels = channels;
                     data.channelMembers = channelMembers;
                     break;
@@ -742,19 +741,8 @@ export function loadChannelsForTeam(teamId, skipDispatch = false, isReconnect = 
                 }
             }
 
-            if (data.categories) {
-                actions.push({
-                    type: ChannelCategoryTypes.RECEIVED_CATEGORY_ORDER,
-                    data: {
-                        teamId,
-                        order: data.categoriesOrder,
-                    },
-                });
-
-                actions.push({
-                    type: ChannelCategoryTypes.RECEIVED_CATEGORIES,
-                    data: data.categories,
-                });
+            if (config.EnableLegacySidebar) {
+                await fetchMyCategories(teamId);
             }
 
             if (data.channels) {

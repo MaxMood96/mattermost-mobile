@@ -383,6 +383,38 @@ export default class List extends PureComponent {
         );
     };
 
+    renderCategorySectionHeader = ({header}) => {
+        const {styles} = this.props;
+        const {name, collapsed} = header;
+
+        return (
+            <View style={styles.titleContainer}>
+                <CompassIcon
+                    size={12}
+                    name={collapsed ? 'chevron-down' : 'chevron-right'}
+                />
+                <Text style={styles.title}>
+                    {name}
+                </Text>
+            </View>
+        );
+    }
+
+    renderCategorySectionItem = ({item}) => {
+        const {testID, favoriteChannelIds, unreadChannelIds} = this.props;
+        const channelItemTestID = `${testID}.channel_item`;
+
+        return (
+            <ChannelItem
+                testID={channelItemTestID}
+                channelId={item}
+                isUnread={unreadChannelIds.includes(item)}
+                isFavorite={favoriteChannelIds.includes(item)}
+                onSelectChannel={this.onSelectChannel}
+            />
+        );
+    }
+
     scrollToTop = () => {
         //eslint-disable-next-line no-underscore-dangle
         if (this.listRef?._wrapperListRef) {
