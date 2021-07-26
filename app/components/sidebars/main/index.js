@@ -12,6 +12,7 @@ import {getCurrentUser} from '@mm-redux/selectors/entities/users';
 
 import {setChannelDisplayName, handleSelectChannel} from 'app/actions/views/channel';
 import {makeDirectChannel} from 'app/actions/views/more_dms';
+import {setCategoryCollapsed} from '@mm-redux/actions/channel_categories';
 
 import MainSidebar from './main_sidebar';
 
@@ -35,6 +36,7 @@ function mapDispatchToProps(dispatch) {
             makeDirectChannel,
             setChannelDisplayName,
             handleSelectChannel,
+            setCategoryCollapsed,
         }, dispatch),
     };
 }

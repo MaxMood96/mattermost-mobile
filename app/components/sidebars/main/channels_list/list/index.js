@@ -21,6 +21,7 @@ import {isAdmin as checkIsAdmin, isSystemAdmin as checkIsSystemAdmin} from '@mm-
 import {getConfig, getLicense, hasNewPermissions} from '@mm-redux/selectors/entities/general';
 import {haveITeamPermission} from '@mm-redux/selectors/entities/roles';
 import Permissions from '@mm-redux/constants/permissions';
+import {lte} from 'semver';
 
 import List from './list';
 
@@ -52,7 +53,6 @@ function mapStateToProps(state) {
         true, // The mobile app should always display the Unreads section regardless of user settings (MM-13420)
         sidebarPrefs.favorite_at_top === 'true' && favoriteChannelIds.length,
     ));
-
     const channelsByCategory = getChannelsByCategoryForCurrentTeam(state);
 
     let canJoinPublicChannels = true;
@@ -65,15 +65,10 @@ function mapStateToProps(state) {
     const canCreatePublicChannels = showCreateOption(state, config, license, currentTeamId, General.OPEN_CHANNEL, isAdmin, isSystemAdmin);
     const canCreatePrivateChannels = showCreateOption(state, config, license, currentTeamId, General.PRIVATE_CHANNEL, isAdmin, isSystemAdmin);
 
-    console.log('--------------');
-    console.log('Unreads', unreadChannelIds);
-    console.log('Favs', favoriteChannelIds);
-    console.log('Channels', orderedChannelIds);
-    console.log('Categories', channelsByCategory);
+    const showLegacySidebar = (lte('5.31.0', config.Version) && config.ExperimentalChannelSidebarOrganization) || !config.EnableLegacySidebar;
 
     return {
         theme: getTheme(state),
-        showLegacySidebar: config.EnableLegacySidebar === 'true',
         canJoinPublicChannels,
         canCreatePrivateChannels,
         canCreatePublicChannels,
@@ -81,6 +76,7 @@ function mapStateToProps(state) {
         favoriteChannelIds,
         orderedChannelIds,
         channelsByCategory,
+        showLegacySidebar,
     };
 }
 

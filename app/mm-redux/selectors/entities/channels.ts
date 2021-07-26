@@ -2,7 +2,6 @@
 // See LICENSE.txt for license information.
 
 /* eslint-disable max-lines */
-/* eslint-disable max-nested-callbacks */
 
 import {createSelector} from 'reselect';
 import {General, Permissions} from '../../constants';
@@ -28,7 +27,7 @@ import {NameMappedObjects, UserIDMappedObjects, IDMappedObjects, RelationOneToOn
 import {getUserIdsInChannels} from './users';
 import {Config} from '@mm-redux/types/config';
 import {makeGetCategoriesForTeam, makeGetChannelsByCategory} from './channel_categories';
-import {CategorySorting, ChannelCategory} from '@mm-redux/types/channel_categories';
+import {ChannelCategory} from '@mm-redux/types/channel_categories';
 type SortingType = 'recent' | 'alpha';
 
 export function getAllChannels(state: GlobalState): IDMappedObjects<Channel> {
@@ -952,15 +951,6 @@ export const getCategoriesForCurrentTeam: (state: GlobalState) => ChannelCategor
         return getCategoriesForTeam(state, currentTeamId);
     });
 })();
-
-export const getAutoSortedCategoryIds: (state: GlobalState) => Set<string> = (() => createSelector(
-    (state: GlobalState) => getCategoriesForCurrentTeam(state),
-    (categories) => {
-        return new Set(categories.filter((category) =>
-            category.sorting === CategorySorting.Alphabetical ||
-            category.sorting === CategorySorting.Recency).map((category) => category.id));
-    },
-))();
 
 export const getChannelsByCategoryForCurrentTeam: (state: GlobalState) => RelationOneToOne<ChannelCategory, Channel[]> = (() => {
     const getChannelsByCategory = makeGetChannelsByCategory();

@@ -3,23 +3,57 @@
 
 import {Client4} from '@client/rest';
 import {ChannelCategoryTypes} from '@mm-redux/action_types';
+import {getCategory} from '@mm-redux/selectors/entities/channel_categories';
 import {getCurrentUserId} from '@mm-redux/selectors/entities/common';
-import {batchActions, DispatchFunc, GetStateFunc} from '@mm-redux/types/actions';
-import {OrderedChannelCategories} from '@mm-redux/types/channel_categories';
+import {ActionFunc, batchActions, DispatchFunc, GetStateFunc} from '@mm-redux/types/actions';
+import {ChannelCategory, OrderedChannelCategories} from '@mm-redux/types/channel_categories';
 import {logError} from './errors';
 import {forceLogoutIfNecessary} from './helpers';
 
 export function expandCategory(categoryId: string) {
-    return {
-        type: ChannelCategoryTypes.CATEGORY_EXPANDED,
-        data: categoryId,
-    };
+    return setCategoryCollapsed(categoryId, false);
 }
 
 export function collapseCategory(categoryId: string) {
-    return {
-        type: ChannelCategoryTypes.CATEGORY_COLLAPSED,
-        data: categoryId,
+    return setCategoryCollapsed(categoryId, true);
+}
+
+export function setCategoryCollapsed(categoryId: string, collapsed: boolean) {
+    return patchCategory(categoryId, {
+        collapsed,
+    });
+}
+
+export function patchCategory(categoryId: string, patch: Partial<ChannelCategory>): ActionFunc {
+    return async (dispatch: DispatchFunc, getState: GetStateFunc) => {
+        const state = getState();
+        const currentUserId = getCurrentUserId(state);
+
+        const category = getCategory(state, categoryId);
+        const patchedCategory = {
+            ...category,
+            ...patch,
+        };
+
+        dispatch({
+            type: ChannelCategoryTypes.RECEIVED_CATEGORY,
+            data: patchedCategory,
+        });
+
+        try {
+            await Client4.updateChannelCategory(currentUserId, category.team_id, patchedCategory);
+        } catch (error) {
+            dispatch({
+                type: ChannelCategoryTypes.RECEIVED_CATEGORY,
+                data: category,
+            });
+
+            forceLogoutIfNecessary(error, dispatch, getState);
+            dispatch(logError(error));
+            return {error};
+        }
+
+        return {data: patchedCategory};
     };
 }
 

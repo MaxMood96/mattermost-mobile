@@ -317,17 +317,24 @@ const ClientChannels = (superclass: any) => class extends superclass {
         return `${this.getBaseRoute()}/users/${userId}/teams/${teamId}/channels/categories`;
     }
 
-    getChannelCategories = (userId: string, teamId: string) => {
+    getChannelCategories = async (userId: string, teamId: string) => {
         return this.doFetch(
             `${this.getChannelCategoriesRoute(userId, teamId)}`,
             {method: 'get'},
         );
     };
 
-    getChannelCategory = (userId: string, teamId: string, categoryId: string) => {
+    getChannelCategory = async (userId: string, teamId: string, categoryId: string) => {
         return this.doFetch(
             `${this.getChannelCategoriesRoute(userId, teamId)}/${categoryId}`,
             {method: 'get'},
+        );
+    };
+
+    updateChannelCategory = (userId: string, teamId: string, category: ChannelCategory) => {
+        return this.doFetch(
+            `${this.getChannelCategoriesRoute(userId, teamId)}/${category.id}`,
+            {method: 'put', body: JSON.stringify(category)},
         );
     };
 };

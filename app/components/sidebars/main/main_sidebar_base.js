@@ -28,6 +28,7 @@ export default class MainSidebarBase extends Component {
             joinChannel: PropTypes.func.isRequired,
             makeDirectChannel: PropTypes.func.isRequired,
             setChannelDisplayName: PropTypes.func.isRequired,
+            setCategoryCollapsed: PropTypes.func.isRequired,
         }).isRequired,
         children: PropTypes.node,
         currentTeamId: PropTypes.string.isRequired,
@@ -231,6 +232,7 @@ export default class MainSidebarBase extends Component {
                     testID='main.sidebar.channels_list'
                     ref={this.channelListRef}
                     onSelectChannel={this.selectChannel}
+                    onCollapseCategory={this.collapseCategory}
                     onJoinChannel={this.joinChannel}
                     onShowTeams={multipleTeams ? this.showTeams : undefined}
                     onSearchStart={this.onSearchStart}
@@ -262,6 +264,12 @@ export default class MainSidebarBase extends Component {
             </SafeAreaView>
         );
     };
+
+    collapseCategory = (categoryId, collapse) => {
+        const {setCategoryCollapsed} = this.props.actions;
+
+        setCategoryCollapsed(categoryId, collapse);
+    }
 
     selectChannel = (channel, currentChannelId, closeDrawer = true) => {
         const {handleSelectChannel} = this.props.actions;

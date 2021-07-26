@@ -2,7 +2,6 @@
 // See LICENSE.txt for license information.
 
 /* eslint-disable max-lines */
-/* eslint-disable max-nested-callbacks */
 
 import {batchActions} from 'redux-batched-actions';
 
@@ -45,6 +44,7 @@ import {isPendingPost} from '@utils/general';
 import {fetchAppBindings} from '@mm-redux/actions/apps';
 import {appsEnabled} from '@utils/apps';
 import {fetchMyCategories} from '@mm-redux/actions/channel_categories';
+import {lte} from 'semver';
 
 const MAX_RETRIES = 3;
 
@@ -732,8 +732,6 @@ export function loadChannelsForTeam(teamId, skipDispatch = false, isReconnect = 
                     data.channelMembers = channelMembers;
                     break;
                 } catch (err) {
-                    // eslint-disable-next-line no-console
-                    console.log(err);
                     if (i === MAX_RETRIES) {
                         const hasChannelsLoaded = state.entities.channels.channelsInTeam[teamId]?.size > 0;
                         return {error: hasChannelsLoaded ? null : err};
@@ -741,8 +739,8 @@ export function loadChannelsForTeam(teamId, skipDispatch = false, isReconnect = 
                 }
             }
 
-            if (config.EnableLegacySidebar) {
-                await fetchMyCategories(teamId);
+            if ((lte(config.Version, '5.31.0') && config.ExperimentalChannelSidebarOrganization === 'true') || config.EnableLegacySidebar === 'false') {
+                await dispatch(fetchMyCategories(teamId));
             }
 
             if (data.channels) {

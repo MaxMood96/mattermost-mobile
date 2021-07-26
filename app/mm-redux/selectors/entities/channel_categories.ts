@@ -1,7 +1,6 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-/* eslint-disable no-console */
 import {createSelector} from 'reselect';
 
 import {General, Preferences} from '../../constants';
@@ -22,6 +21,14 @@ import {IDMappedObjects, RelationOneToOne} from '@mm-redux/types/utilities';
 import {getUserIdFromChannelName, isFavoriteChannel, isUnreadChannel} from '@mm-redux/utils/channel_utils';
 import {getPreferenceKey} from '@mm-redux/utils/preference_utils';
 import {displayUsername} from '@mm-redux/utils/user_utils';
+
+export function getAllCategoriesByIds(state: GlobalState) {
+    return state.entities.channelCategories.byId;
+}
+
+export function getCategory(state: GlobalState, categoryId: string) {
+    return getAllCategoriesByIds(state)[categoryId];
+}
 
 export function getCategoryIdsForTeam(state: GlobalState, teamId: string): string[] | undefined {
     return state.entities.channelCategories.orderByTeam[teamId];

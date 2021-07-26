@@ -42,14 +42,15 @@ export default class List extends PureComponent {
         styles: PropTypes.object.isRequired,
         theme: PropTypes.object.isRequired,
         onSelectChannel: PropTypes.func.isRequired,
+        onCollapseCategory: PropTypes.func.isRequired,
         canJoinPublicChannels: PropTypes.bool.isRequired,
         canCreatePrivateChannels: PropTypes.bool.isRequired,
         canCreatePublicChannels: PropTypes.bool.isRequired,
-        showLegacySidebar: PropTypes.bool.isRequired,
         unreadChannelIds: PropTypes.array.isRequired,
         favoriteChannelIds: PropTypes.array.isRequired,
         orderedChannelIds: PropTypes.array.isRequired,
-        channelsByCategory: PropTypes.array.isRequired,
+        channelsByCategory: PropTypes.array,
+        showLegacySidebar: PropTypes.bool.isRequired,
     };
 
     static contextTypes = {
@@ -114,7 +115,7 @@ export default class List extends PureComponent {
         this.listRef = ref;
     }
 
-    getSectionConfigByType = (props, sectionType, displayName = 'x') => {
+    getSectionConfigByType = (props, sectionType) => {
         const {canCreatePrivateChannels, canJoinPublicChannels} = props;
 
         switch (sectionType) {
@@ -123,7 +124,6 @@ export default class List extends PureComponent {
                 id: t('mobile.channel_list.unreads'),
                 defaultMessage: 'UNREADS',
             };
-        case 'favorites':
         case SidebarSectionTypes.FAVORITE:
             return {
                 id: t('sidebar.favorite'),
@@ -141,7 +141,6 @@ export default class List extends PureComponent {
                 id: t('sidebar.pg'),
                 defaultMessage: 'PRIVATE CHANNELS',
             };
-        case 'direct_messages':
         case SidebarSectionTypes.DIRECT:
             return {
                 action: this.goToDirectMessages,
@@ -154,17 +153,11 @@ export default class List extends PureComponent {
                 id: t('sidebar.types.recent'),
                 defaultMessage: 'RECENT ACTIVITY',
             };
-        case 'channels':
         case SidebarSectionTypes.ALPHA:
             return {
                 action: this.showCreateChannelOptions,
                 id: t('mobile.channel_list.channels'),
                 defaultMessage: 'CHANNELS',
-            };
-        case 'custom':
-            return {
-                id: displayName,
-                defaultMessage: displayName,
             };
         default:
             return {
@@ -176,36 +169,20 @@ export default class List extends PureComponent {
     };
 
     buildSections = (props) => {
-        if (props.showLegacySidebar) {
-            const {
-                orderedChannelIds,
-            } = props;
-
-            return orderedChannelIds.map((s) => {
-                return {
-                    ...this.getSectionConfigByType(props, s.type),
-                    data: s.items,
-                };
-            });
-        }
-
         const {
-            channelsByCategory,
             orderedChannelIds,
+            channelsByCategory,
+            showLegacySidebar,
         } = props;
 
-        const unreads = orderedChannelIds.find((el) => el.type === 'unreads');
+        if (channelsByCategory.length && !showLegacySidebar) {
+            return this.buildCategorySections(channelsByCategory);
+        }
 
-        channelsByCategory.unshift({
-            channel_ids: unreads.items,
-            name: unreads.name,
-            type: unreads.type,
-        });
-
-        return channelsByCategory.map((cat) => {
+        return orderedChannelIds.map((s) => {
             return {
-                ...this.getSectionConfigByType(props, cat.type, cat.display_name),
-                data: cat.channel_ids,
+                ...this.getSectionConfigByType(props, s.type),
+                data: s.items,
             };
         });
     };
@@ -383,24 +360,11 @@ export default class List extends PureComponent {
         );
     };
 
-    renderCategorySectionHeader = ({header}) => {
-        const {styles} = this.props;
-        const {name, collapsed} = header;
+    renderCategoryItem = ({item, section}) => {
+        if (section.collapsed) {
+            return null;
+        }
 
-        return (
-            <View style={styles.titleContainer}>
-                <CompassIcon
-                    size={12}
-                    name={collapsed ? 'chevron-down' : 'chevron-right'}
-                />
-                <Text style={styles.title}>
-                    {name}
-                </Text>
-            </View>
-        );
-    }
-
-    renderCategorySectionItem = ({item}) => {
         const {testID, favoriteChannelIds, unreadChannelIds} = this.props;
         const channelItemTestID = `${testID}.channel_item`;
 
@@ -413,6 +377,64 @@ export default class List extends PureComponent {
                 onSelectChannel={this.onSelectChannel}
             />
         );
+    };
+
+    renderCategoryHeader = ({section}) => {
+        const {styles, onCollapseCategory} = this.props;
+        const {action, id, name, collapsed, type} = section;
+        const anchor = (id === 'sidebar.types.recent' || id === 'mobile.channel_list.channels');
+
+        const header = (
+            <View style={styles.titleContainer}>
+                {type !== 'unreads' &&
+                    <CompassIcon
+                        name={collapsed ? 'chevron-right' : 'chevron-down'}
+                        ref={anchor ? this.combinedActionsRef : null}
+                        style={styles.chevron}
+                    />}
+                <Text style={styles.title}>
+                    {name}
+                </Text>
+                <View style={styles.separatorContainer}>
+                    <Text> </Text>
+                </View>
+                {action && this.renderSectionAction(styles, action, anchor, id)}
+            </View>
+        );
+
+        if (type === 'unreads') {
+            return header;
+        }
+
+        return (
+            <TouchableHighlight onPress={() => onCollapseCategory(id, !collapsed)}>
+                {header}
+            </TouchableHighlight>
+        );
+    }
+
+    buildCategorySections = (channelsByCategory) => {
+        const data = [];
+
+        // Start with Unreads
+        data.push({
+            id: 'unreads',
+            name: 'UNREADS',
+            data: this.props.unreadChannelIds,
+            type: 'unreads',
+        });
+
+        // Add the rest
+        channelsByCategory.map((cat) => {
+            return data.push({
+                name: cat.display_name,
+                action: cat.type === 'direct_messages' ? this.goToDirectMessages : this.showCreateChannelOptions,
+                data: cat.channel_ids,
+                ...cat,
+            });
+        });
+
+        return data;
     }
 
     scrollToTop = () => {
@@ -464,7 +486,7 @@ export default class List extends PureComponent {
     };
 
     render() {
-        const {testID, styles, theme} = this.props;
+        const {testID, styles, theme, channelsByCategory, showLegacySidebar} = this.props;
         const {sections, showIndicator} = this.state;
 
         const paddingBottom = this.listContentPadding();
@@ -479,8 +501,8 @@ export default class List extends PureComponent {
                     sections={sections}
                     contentContainerStyle={{paddingBottom}}
                     removeClippedSubviews={Platform.OS === 'android'}
-                    renderItem={this.renderItem}
-                    renderSectionHeader={this.renderSectionHeader}
+                    renderItem={channelsByCategory.length && !showLegacySidebar ? this.renderCategoryItem : this.renderItem}
+                    renderSectionHeader={channelsByCategory.length && !showLegacySidebar ? this.renderCategoryHeader : this.renderSectionHeader}
                     keyboardShouldPersistTaps={'always'}
                     keyExtractor={this.keyExtractor}
                     onViewableItemsChanged={this.updateUnreadIndicators}
