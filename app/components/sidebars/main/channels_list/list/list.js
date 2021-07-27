@@ -393,7 +393,7 @@ export default class List extends PureComponent {
                         style={styles.chevron}
                     />}
                 <Text style={styles.title}>
-                    {name}
+                    {name.toUpperCase()}
                 </Text>
                 <View style={styles.separatorContainer}>
                     <Text> </Text>
