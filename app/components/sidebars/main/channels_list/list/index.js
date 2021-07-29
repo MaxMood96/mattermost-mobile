@@ -63,7 +63,7 @@ function mapStateToProps(state) {
     const canCreatePublicChannels = showCreateOption(state, config, license, currentTeamId, General.OPEN_CHANNEL, isAdmin, isSystemAdmin);
     const canCreatePrivateChannels = showCreateOption(state, config, license, currentTeamId, General.PRIVATE_CHANNEL, isAdmin, isSystemAdmin);
 
-    const showLegacySidebar = (lte('5.31.0', config.Version) && config.ExperimentalChannelSidebarOrganization) || !config.EnableLegacySidebar;
+    const showLegacySidebar = (lte('5.31.0', config.Version) && config.ExperimentalChannelSidebarOrganization === 'true') || config.EnableLegacySidebar !== 'false';
 
     return {
         theme: getTheme(state),
