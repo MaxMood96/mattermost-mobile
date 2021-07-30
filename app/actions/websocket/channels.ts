@@ -4,7 +4,7 @@
 import {fetchChannelAndMyMember} from '@actions/helpers/channels';
 import {loadChannelsForTeam} from '@actions/views/channel';
 import {WebsocketEvents} from '@constants';
-import {markChannelAsRead} from '@mm-redux/actions/channels';
+import {getChannelAndMyMember, markChannelAsRead} from '@mm-redux/actions/channels';
 import {Client4} from '@client/rest';
 import {ChannelTypes, TeamTypes, RoleTypes} from '@mm-redux/action_types';
 import {General} from '@mm-redux/constants';
@@ -22,6 +22,7 @@ import {ActionResult, DispatchFunc, GenericAction, GetStateFunc, batchActions} f
 import {WebSocketMessage} from '@mm-redux/types/websocket';
 import {getChannelByName} from '@mm-redux/utils/channel_utils';
 import EventEmitter from '@mm-redux/utils/event_emitter';
+import {addChannelToInitialCategory} from '@mm-redux/actions/channel_categories';
 
 export function handleChannelConvertedEvent(msg: WebSocketMessage) {
     return (dispatch: DispatchFunc, getState: GetStateFunc): ActionResult => {
@@ -40,6 +41,9 @@ export function handleChannelConvertedEvent(msg: WebSocketMessage) {
 }
 
 export function handleChannelCreatedEvent(msg: WebSocketMessage) {
+    // Add to sidebar too
+    fetchChannelAndAddToSidebar(msg.broadcast.channel_id);
+
     return async (dispatch: DispatchFunc, getState: GetStateFunc): Promise<ActionResult> => {
         const {channel_id: channelId, team_id: teamId} = msg.data;
         const state = getState();
@@ -199,6 +203,9 @@ export function handleChannelViewedEvent(msg: WebSocketMessage) {
 }
 
 export function handleDirectAddedEvent(msg: WebSocketMessage) {
+    // Add to sidebar too
+    fetchChannelAndAddToSidebar(msg.broadcast.channel_id);
+
     return async (dispatch: DispatchFunc): Promise<ActionResult> => {
         const channelActions = await fetchChannelAndMyMember(msg.broadcast.channel_id);
         if (channelActions.length) {
@@ -236,3 +243,15 @@ export function handleUpdateMemberRoleEvent(msg: WebSocketMessage) {
     };
 }
 
+export function fetchChannelAndAddToSidebar(channelId: string) {
+    return async (dispatch: DispatchFunc): Promise<ActionResult> => {
+        const {data, error} = await dispatch(getChannelAndMyMember(channelId));
+
+        if (!error) {
+            dispatch(addChannelToInitialCategory(data.channel));
+            return {data: true};
+        }
+
+        return {data: false};
+    };
+}
