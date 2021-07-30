@@ -15,12 +15,14 @@ describe('ChannelsList List', () => {
         canJoinPublicChannels: true,
         canCreatePrivateChannels: true,
         canCreatePublicChannels: true,
+        showLegacySidebar: true,
         favoriteChannelIds: [],
         unreadChannelIds: [],
         styles: {},
         theme: Preferences.THEMES.default,
         orderedChannelIds: [],
         isLandscape: false,
+        onCollapseCategory: jest.fn(),
     };
 
     test('should match snapshot', () => {

@@ -960,3 +960,16 @@ export const getChannelsByCategoryForCurrentTeam: (state: GlobalState) => Relati
         return getChannelsByCategory(state, currentTeamId);
     });
 })();
+
+// makeGetChannelsForIds returns a selector that, given an array of channel IDs, returns a list of the corresponding
+// channels. Channels are returned in the same order as the given IDs with undefined entries replacing any invalid IDs.
+// Note that memoization will fail if an array literal is passed in.
+export function makeGetChannelsForIds(): (state: GlobalState, ids: string[]) => Channel[] {
+    return createSelector(
+        getAllChannels,
+        (state: GlobalState, ids: string[]) => ids,
+        (allChannels, ids) => {
+            return ids.map((id) => allChannels[id]);
+        },
+    );
+}

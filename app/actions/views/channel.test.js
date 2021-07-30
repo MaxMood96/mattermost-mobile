@@ -167,6 +167,12 @@ describe('Actions.Views.Channel', () => {
                     [currentTeamId]: {},
                 },
             },
+            general: {
+                config: {
+                    EnableLegacySidebar: 'true',
+                },
+                serverVersion: '5.12.0',
+            },
         },
     };
 

@@ -1,5 +1,6 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
+/* eslint-disable max-lines */
 
 import React, {PureComponent} from 'react';
 import PropTypes from 'prop-types';
@@ -175,7 +176,7 @@ export default class List extends PureComponent {
             showLegacySidebar,
         } = props;
 
-        if (channelsByCategory.length && !showLegacySidebar) {
+        if (channelsByCategory && channelsByCategory.length && !showLegacySidebar) {
             return this.buildCategorySections(channelsByCategory);
         }
 
@@ -501,8 +502,8 @@ export default class List extends PureComponent {
                     sections={sections}
                     contentContainerStyle={{paddingBottom}}
                     removeClippedSubviews={Platform.OS === 'android'}
-                    renderItem={channelsByCategory.length && !showLegacySidebar ? this.renderCategoryItem : this.renderItem}
-                    renderSectionHeader={channelsByCategory.length && !showLegacySidebar ? this.renderCategoryHeader : this.renderSectionHeader}
+                    renderItem={channelsByCategory && channelsByCategory.length && !showLegacySidebar ? this.renderCategoryItem : this.renderItem}
+                    renderSectionHeader={channelsByCategory && channelsByCategory.length && !showLegacySidebar ? this.renderCategoryHeader : this.renderSectionHeader}
                     keyboardShouldPersistTaps={'always'}
                     keyExtractor={this.keyExtractor}
                     onViewableItemsChanged={this.updateUnreadIndicators}
