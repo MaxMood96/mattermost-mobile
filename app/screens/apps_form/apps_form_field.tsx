@@ -26,12 +26,12 @@ export type Props = {
     theme: Theme;
 
     value: AppFormValue;
-    onChange: (name: string, value: string | AppSelectOption | AppSelectOption[] | boolean) => void;
+    onChange: (name: string, value: AppFormValue) => void;
     performLookup: (name: string, userInput: string) => Promise<AppSelectOption[]>;
 }
 
 type State = {
-    selected?: DialogOption | DialogOption[];
+    selected?: DialogOption | DialogOption[] | null;
 }
 
 const getStyleSheet = makeStyleSheetFromTheme((theme: Theme) => {
@@ -52,7 +52,34 @@ export default class AppsFormField extends React.PureComponent<Props, State> {
     constructor(props: Props) {
         super(props);
 
-        this.state = {};
+        let selected;
+        switch (props.field.type) {
+        case AppFieldTypes.STATIC_SELECT:
+        case AppFieldTypes.DYNAMIC_SELECT:
+        case AppFieldTypes.USER:
+        case AppFieldTypes.CHANNEL: {
+            const value = props.value as AppSelectOption[] | AppSelectOption | null;
+            if (value) {
+                if (Array.isArray(value)) {
+                    selected = value.map((option) => {
+                        return {
+                            text: option.label,
+                            value: option.value,
+                        };
+                    });
+                } else {
+                    selected = {
+                        text: value.label,
+                        value: value.value,
+                    };
+                }
+            }
+        }
+        }
+
+        this.state = {
+            selected,
+        };
     }
 
     handleAutocompleteSelect = (selected: DialogOption) => {
@@ -71,6 +98,15 @@ export default class AppsFormField extends React.PureComponent<Props, State> {
         };
 
         this.props.onChange(field.name, selectedOption);
+    };
+
+    handleClear = () => {
+        const {field, onChange} = this.props;
+
+        const selected = null;
+
+        this.setState({selected});
+        onChange(field.name, selected);
     };
 
     handleMultioptionAutocompleteSelect = (selected: DialogOption[]) => {
@@ -210,6 +246,7 @@ export default class AppsFormField extends React.PureComponent<Props, State> {
                     dataSource={dataSource}
                     options={options}
                     optional={!field.is_required}
+                    onClear={this.handleClear}
                     onSelected={field.multiselect ? this.handleMultioptionAutocompleteSelect : this.handleAutocompleteSelect}
                     getDynamicOptions={this.getDynamicOptions}
                     helpText={field.description}
