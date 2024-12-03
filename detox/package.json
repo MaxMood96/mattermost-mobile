@@ -8,7 +8,7 @@
     "@babel/plugin-transform-modules-commonjs": "7.16.8",
     "@babel/plugin-transform-runtime": "7.16.10",
     "@babel/preset-env": "7.16.11",
-    "axios": "0.25.0",
+    "axios": "1.7.8",
     "babel-jest": "27.4.6",
     "babel-plugin-module-resolver": "4.1.0",
     "client-oauth2": "github:larkox/js-client-oauth2#e24e2eb5dfcbbbb3a59d095e831dbe0012b0ac49",
