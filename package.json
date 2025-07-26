@@ -30,7 +30,7 @@
     "deep-equal": "2.0.5",
     "deepmerge": "4.2.2",
     "emoji-regex": "10.0.0",
-    "form-data": "4.0.0",
+    "form-data": "4.0.4",
     "fuse.js": "6.5.3",
     "intl": "1.2.5",
     "jail-monkey": "2.6.0",
