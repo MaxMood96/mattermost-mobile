@@ -155,7 +155,7 @@
     "jest-enzyme": "7.1.2",
     "jetifier": "2.0.0",
     "jsdom-global": "3.0.2",
-    "metro-react-native-babel-preset": "0.67.0",
+    "metro-react-native-babel-preset": "0.77.0",
     "mmjstool": "git://github.com/mattermost/mattermost-utilities#010f456ea8be5beebafdb8776177cba515c1969e",
     "mock-async-storage": "2.2.0",
     "mock-socket": "9.1.2",
